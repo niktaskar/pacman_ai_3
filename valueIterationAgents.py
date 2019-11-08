@@ -37,21 +37,31 @@ class ValueIterationAgent(ValueEstimationAgent):
     self.values = util.Counter() # A Counter is a dict with default 0
      
     "*** YOUR CODE HERE ***"
-    count = 0
+    # Iterate through the set number of rounds
+    # Go through and set values of each state in the dictionary
     possibleStates = self.mdp.getStates()
     new_policy = self.values
-    while(count < iterations):
+    # Go through the iterations
+    for i in range(iterations):
+      # Set new policy to be remembered to new dictionary
+      new_policy = util.Counter()
+      # For state in all possible states
       for state in possibleStates:
+        # Get the policy for a specific state
         policy = self.getAction(state)
+        # If the policy is not None
         if policy is not None:
           new_policy[state] = self.getQValue(state, policy)
+        else:
+          new_policy[state] = self.values[state]
       self.values = new_policy
-      count+=1
     
   def getValue(self, state):
     """
       Return the value of the state (computed in __init__).
     """
+
+    # Returns the value of the given state
     return self.values[state]
 
 
@@ -64,16 +74,23 @@ class ValueIterationAgent(ValueEstimationAgent):
       to derive it on the fly.
     """
     "*** YOUR CODE HERE ***"
-    # util.raiseNotDefined()
-    ret = 0.0
-    stateProb = self.mdp.getTransitionStatesAndProbs(state, action)
-    for element in stateProb:
-      s_prime = element[0]
-      prob = element[1]
-      reward = self.mdp.getReward(state, action, s_prime)
-      # Q(s, a) = SUM_(T(s,a,s')[R(s,a,s') + Y*V(s')])
-      ret += prob*(reward + self.discount*self.getValue(s_prime))
 
+    # Returns the Q value of the state, action pair
+    # Should be the expected "outcome" of all possible resulting states + reward in current state
+    ret = 0
+    reward = 0
+    # Given a state and action
+    # We get the transition function and the states that we could enter
+    stateProb = self.mdp.getTransitionStatesAndProbs(state, action)
+    for s_prime, prob in stateProb:
+      # We calculate Q values using the formula below
+      reward += prob*self.mdp.getReward(state, action, s_prime)
+      discount = self.discount
+      v_star = self.getValue(s_prime)
+      # Q(s, a) = SUM_(T(s,a,s')[R(s,a,s') + Y*V(s')])
+      ret += (prob*(discount*v_star))
+
+    ret += reward
     return ret
 
   def getPolicy(self, state):
@@ -85,21 +102,24 @@ class ValueIterationAgent(ValueEstimationAgent):
       terminal state, you should return None.
     """
     "*** YOUR CODE HERE ***"
-    # Returns the best action based on Q values of state
+
+    # Returns the best action based on computed values of possible actions in state
     maxVal = float("-inf")
     currMove = None
     possibleActions = self.mdp.getPossibleActions(state)
-    if self.mdp.isTerminal(state):
+    if self.mdp.isTerminal(state) or len(possibleActions) == 0:
       return None
 
     for action in possibleActions:
       # Find the Q(s, a) of all possible actions at a given state
       qVal = self.getQValue(state, action)
-      if qVal >= maxVal:
+      # If the value of the qval for state, action pair is greater than previous thought then we sub
+      if qVal > maxVal:
         maxVal = qVal
         currMove = action
 
     return currMove
+    # return self.values[state]
 
   def getAction(self, state):
     "Returns the policy at the state (no exploration)."
