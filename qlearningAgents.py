@@ -69,14 +69,6 @@ class QLearningAgent(ReinforcementAgent):
     
     maxVal = 0.0
     qVals = [self.getQValue(state, action) for action in possibleActions]
-    # currAction = None
-    # for action in possibleActions:
-    #   currVal = self.getQValue(state, action)
-    #   if maxVal < currVal:
-    #     maxVal =  currVal
-    #     currAction = action
-      # elif maxVal == currVal:
-      #   currAction = random.choice(currAction, action)
     
     return max(qVals)
 
@@ -90,18 +82,20 @@ class QLearningAgent(ReinforcementAgent):
     "*** YOUR CODE HERE ***"
     # util.raiseNotDefined()
     possibleActions = self.getLegalActions(state)
-    if possibleActions is None or len(possibleActions) == 0:
-      return None
+    # if possibleActions is None or len(possibleActions) == 0:
+      # return None
 
-    maxVal = 0.0
+    maxVal = float("-inf")
     currAction = None
     for action in possibleActions:
       currVal = self.getQValue(state, action)
       if maxVal < currVal:
         maxVal =  currVal
         currAction = action
-      # elif maxVal == currVal:
-      #   currAction = random.choice(currAction, action)
+      elif maxVal == currVal:
+        currAction = random.choice((currAction, action))
+
+      self.qvalues[(state, currAction)] = self.getQValue(state, currAction)
     
     return currAction
 
@@ -121,6 +115,7 @@ class QLearningAgent(ReinforcementAgent):
     action = None
     "*** YOUR CODE HERE ***"
     # util.raiseNotDefined()
+    # print(legalActions)
     if legalActions is None or len(legalActions) == 0:
       return None
     
@@ -146,7 +141,8 @@ class QLearningAgent(ReinforcementAgent):
     currState = self.qvalues[(state, action)]
     nextStateVal = self.getValue(nextState)
 
-    self.qvalues[(state, action)] = currState + (self.alpha*(reward + self.discount*nextStateVal-currState))
+    # self.qvalues[(state, action)] = currState + (self.alpha*(reward + self.discount*nextStateVal-currState))
+    self.qvalues[(state, action)] = (1-self.alpha)*currState + self.alpha*(reward + self.discount*nextStateVal) 
 
 class PacmanQAgent(QLearningAgent):
   "Exactly the same as QLearningAgent, but with different default parameters"
